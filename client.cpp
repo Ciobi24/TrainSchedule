@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-extern int errno;
+// extern int errno;
 
 int main(int argc, char *argv[])
 {
@@ -58,6 +58,18 @@ int main(int argc, char *argv[])
       }
       else if (command == 1 )
       {
+        //sosiri
+        printf("introduceti statia: ");
+                fflush(stdout);
+                char statie[30];
+        bzero(&statie,sizeof(statie));
+        scanf("%s", &statie);
+//////////////////trimitere comanda la server
+      if (write(sock_descr, &statie, sizeof(statie)) <= 0)
+      {
+        perror("[client]Eroare la scrierea catre server\n");
+        return errno;
+      }
         char raspuns[10000];
         bzero(raspuns, sizeof(raspuns)); 
 ///////////////primire raspuns
@@ -69,7 +81,19 @@ int main(int argc, char *argv[])
         printf("\n%s\n", raspuns);
       }
       else if(command==2){
-char raspuns[10000];
+        //plecari
+        printf("introduceti statia: ");
+                fflush(stdout);
+                char statie[30];
+        bzero(&statie,sizeof(statie));
+        scanf("%s", &statie);
+//////////////////trimitere comanda la server
+      if (write(sock_descr, &statie, sizeof(statie)) <= 0)
+      {
+        perror("[client]Eroare la scrierea catre server\n");
+        return errno;
+      }
+        char raspuns[10000];
         bzero(raspuns, sizeof(raspuns)); 
 ///////////////primire raspuns
         if (read(sock_descr, raspuns, 10000) < 0)
@@ -78,8 +102,9 @@ char raspuns[10000];
           return errno;
         }
         printf("\n%s\n", raspuns);
-      }else if(command==3){
-char raspuns[10000];
+      }
+      else if(command==3){
+                char raspuns[10000];
         bzero(raspuns, sizeof(raspuns)); 
 ///////////////primire raspuns
         if (read(sock_descr, raspuns, 10000) < 0)
