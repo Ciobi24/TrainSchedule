@@ -112,14 +112,31 @@ void StatusSosiri(void *arg)
             {
                 bool ok;
                 int ora1, ora2, min1, min2;
-                char ora_tren[10];
+                char ora_tren[10], intarziere[10];
                 strcpy(ora_tren, station.attribute("ora_sosire").value());
+                strcpy(intarziere, station.attribute("intarziere").value());
                 ora1 = (ora[0] - '0') * 10 + (ora[1] - '0');
                 min1 = (ora[3] - '0') * 10 + (ora[4] - '0');
                 ora2 = (ora_tren[0] - '0') * 10 + (ora_tren[1] - '0');
                 min2 = (ora_tren[3] - '0') * 10 + (ora_tren[4] - '0');
-                if (ora2 == 0 && ora1 == 12)
-                    ora2 = 13;
+                int intarz = atoi(intarziere);
+                if (intarz >= 0)
+                {
+                    ora2 = ora2 + (min2 + intarz) / 60;
+                    min2 = (min2 + intarz) % 60;
+                }
+                else
+                {
+                    if (min2 >= -intarz)
+                        min2 = min2 + intarz;
+                    else
+                    {
+                        ora2 = ora2 - 1 + (min2 + intarz) / 60;
+                        min2 = 60 + (min2 + intarz) % 60;
+                    }
+                }
+                if (ora2 == 0 && ora1 == 23)
+                    ora2 = 24;
                 if (ora1 == ora2 - 1 && (60 - min1 + min2) <= 60)
                     ok = true;
                 else if (ora1 == ora2 && (min2 - min1) >= 0 && (min2 - min1) <= 60)
@@ -136,14 +153,16 @@ void StatusSosiri(void *arg)
                         strcat(msg, "Tren ");
                         tren_sosire = true;
                         strcat(msg, tren.attribute("name").value());
-                        strcat(msg, "  Sosire ");
-                        strcat(msg, station.attribute("ora_sosire").value());
-                        if (strcmp(station.attribute("id").value(), "last"))
+                        if (strcmp(station.attribute("id").value(), "first"))
                         {
-                            strcat(msg, " Plecare ");
-                            strcat(msg, station.attribute("ora_plecare").value());
+                            strcat(msg, "  Sosire ");
+                            strcat(msg, station.attribute("ora_sosire").value());
                         }
-                        if (strcmp(station.attribute("intarziere").value(), "0") == 0)
+
+                        strcat(msg, " Plecare ");
+                        strcat(msg, station.attribute("ora_plecare").value());
+
+                        if (strcmp(station.attribute("intarziere").value(), "0"))
                         {
                             strcat(msg, " Intarziere ");
                             strcat(msg, station.attribute("intarziere").value());
@@ -215,14 +234,31 @@ void StatusPlecari(void *arg)
             {
                 bool ok;
                 int ora1, ora2, min1, min2;
-                char ora_tren[10];
-                strcpy(ora_tren, station.attribute("ora_plecare").value());
+                char ora_tren[10], intarziere[10];
+                strcpy(ora_tren, station.attribute("ora_sosire").value());
+                strcpy(intarziere, station.attribute("intarziere").value());
                 ora1 = (ora[0] - '0') * 10 + (ora[1] - '0');
                 min1 = (ora[3] - '0') * 10 + (ora[4] - '0');
                 ora2 = (ora_tren[0] - '0') * 10 + (ora_tren[1] - '0');
                 min2 = (ora_tren[3] - '0') * 10 + (ora_tren[4] - '0');
-                if (ora2 == 0 && ora1 == 12)
-                    ora2 = 13;
+                int intarz = atoi(intarziere);
+                if (intarz >= 0)
+                {
+                    ora2 = ora2 + (min2 + intarz) / 60;
+                    min2 = (min2 + intarz) % 60;
+                }
+                else
+                {
+                    if (min2 >= -intarz)
+                        min2 = min2 + intarz;
+                    else
+                    {
+                        ora2 = ora2 - 1 + (min2 + intarz) / 60;
+                        min2 = 60 + (min2 + intarz) % 60;
+                    }
+                }
+                if (ora2 == 0 && ora1 == 23)
+                    ora2 = 24;
                 if (ora1 == ora2 - 1 && (60 - min1 + min2) <= 60)
                     ok = true;
                 else if (ora1 == ora2 && (min2 - min1) >= 0 && (min2 - min1) <= 60)
@@ -247,7 +283,7 @@ void StatusPlecari(void *arg)
                             strcat(msg, " Plecare ");
                             strcat(msg, station.attribute("ora_plecare").value());
                         }
-                        if (strcmp(station.attribute("intarziere").value(), "0") == 0)
+                        if (strcmp(station.attribute("intarziere").value(), "0"))
                         {
                             strcat(msg, " Intarziere ");
                             strcat(msg, station.attribute("intarziere").value());
@@ -314,10 +350,14 @@ void Intarziere(void *arg)
             {
                 for (pugi::xml_node station = tren.child("Statii").child("Statie"); station; station = station.next_sibling("Statie"))
                 {
-                    if(strcmp(statie,station.attribute("name").value())==0){
-                        pugi::xml_attribute attr = station.attribute("intarziere");
-                        attr.set_value(est);
-                        doc.save_file("program.xml"); 
+                    if (strcmp(statie, station.attribute("name").value()) == 0)
+                    {
+                        for (pugi::xml_node nextst = station; nextst; nextst = nextst.next_sibling("Statie"))
+                        {
+                            pugi::xml_attribute attr = nextst.attribute("intarziere");
+                            attr.set_value(est);
+                        }
+                        doc.save_file("program.xml");
                         break;
                     }
                 }
@@ -404,11 +444,11 @@ void connection(struct threadInfo &arg)
                 printf("XML [ ] parsed with errors, attr value: %s\n", doc.child("node").attribute("attr").value());
                 printf("Error description: %s", result.description());
             }
-
         }
-        arg.admin=true;
+        arg.admin = true;
     }
-    else arg.admin=false;
+    else
+        arg.admin = false;
 }
 static void *treat(void *arg)
 {
@@ -416,7 +456,7 @@ static void *treat(void *arg)
     int nr;
     thread = *((struct threadInfo *)arg);
     connection(thread);
-    printf("%d\n",(int)thread.admin);
+    printf("%d\n", (int)thread.admin);
     fflush(stdout);
     while (1)
     {
@@ -444,7 +484,7 @@ static void *treat(void *arg)
             close((intptr_t)arg);
             return (NULL);
         }
-        else if (nr == 5 && thread.admin==true)
+        else if (nr == 5 && thread.admin == true)
         {
             // printf("comanda 5\n");
             // fflush(stdout);

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Program time="22:22">
+<Program time="23:20">
 	<Tren name="1">
 		<Statii>
 			<Statie id="first" name="Iasi" ora_plecare="09:40" intarziere="0" />
@@ -48,12 +48,12 @@
 	<Tren name="5">
 		<Statii>
 			<Statie id="first" name="Bucuresti" ora_plecare="22:40" intarziere="0" />
-			<Statie id="2" name="Lehliu" ora_sosire="23:08" ora_plecare="23:19" intarziere="0" />
-			<Statie id="3" name="Ciulnita" ora_sosire="00:14" ora_plecare="00:22" intarziere="0" />
-			<Statie id="4" name="Fetesti" ora_sosire="01:29" ora_plecare="01:36" intarziere="0" />
-			<Statie id="4" name="Cernavoda" ora_sosire="02:17" ora_plecare="02:27" intarziere="0" />
-			<Statie id="4" name="Medgidia" ora_sosire="03:09" ora_plecare="03:13" intarziere="0" />
-			<Statie id="last" name="Constanta" ora_sosire="04:55" intarziere="0" />
+			<Statie id="2" name="Lehliu" ora_sosire="23:08" ora_plecare="23:19" intarziere="30" />
+			<Statie id="3" name="Ciulnita" ora_sosire="00:14" ora_plecare="00:22" intarziere="30" />
+			<Statie id="4" name="Fetesti" ora_sosire="01:29" ora_plecare="01:36" intarziere="30" />
+			<Statie id="4" name="Cernavoda" ora_sosire="02:17" ora_plecare="02:27" intarziere="30" />
+			<Statie id="4" name="Medgidia" ora_sosire="03:09" ora_plecare="03:13" intarziere="30" />
+			<Statie id="last" name="Constanta" ora_sosire="04:55" intarziere="30" />
 		</Statii>
 	</Tren>
 </Program>
