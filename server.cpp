@@ -135,7 +135,9 @@ void StatusSosiri(void *arg)
                         min2 = 60 + (min2 + intarz) % 60;
                     }
                 }
-                if (ora2 == 0 && ora1 == 23)
+                ora2 = ora2 % 24;
+                ora1 = ora1 % 24;
+                if (ora1 == 23 && ora2 == 0)
                     ora2 = 24;
                 if (ora1 == ora2 - 1 && (60 - min1 + min2) <= 60)
                     ok = true;
@@ -257,7 +259,9 @@ void StatusPlecari(void *arg)
                         min2 = 60 + (min2 + intarz) % 60;
                     }
                 }
-                if (ora2 == 0 && ora1 == 23)
+                ora2 = ora2 % 24;
+                ora1 = ora1 % 24;
+                if (ora1 == 23 && ora2 == 0)
                     ora2 = 24;
                 if (ora1 == ora2 - 1 && (60 - min1 + min2) <= 60)
                     ok = true;
