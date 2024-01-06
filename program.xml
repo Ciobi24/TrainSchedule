@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
-<Program time="23:20">
+<Program time="16:57">
 	<Tren name="1">
 		<Statii>
 			<Statie id="first" name="Iasi" ora_plecare="09:40" intarziere="0" />
-			<Statie id="2" name="Pascani" ora_sosire="10:20" ora_plecare="10:25" intarziere="0" />
-			<Statie id="3" name="Roman" ora_sosire="11:00" ora_plecare="11:05" intarziere="0" />
-			<Statie id="4" name="Bacau" ora_sosire="11:30" ora_plecare="11:38" intarziere="0" />
-			<Statie id="5" name="Vrancea" ora_sosire="12:35" ora_plecare="12:40" intarziere="0" />
-			<Statie id="6" name="Buzau" ora_sosire="13:10" ora_plecare="13:30" intarziere="0" />
-			<Statie id="last" name="Bucuresti Nord" ora_sosire="14:20" intarziere="0" />
+			<Statie id="2" name="Pascani" ora_sosire="10:20" ora_plecare="10:25" intarziere="7" />
+			<Statie id="3" name="Roman" ora_sosire="11:00" ora_plecare="11:05" intarziere="7" />
+			<Statie id="4" name="Bacau" ora_sosire="11:30" ora_plecare="11:38" intarziere="7" />
+			<Statie id="5" name="Vrancea" ora_sosire="12:35" ora_plecare="12:40" intarziere="7" />
+			<Statie id="6" name="Buzau" ora_sosire="13:10" ora_plecare="13:30" intarziere="7" />
+			<Statie id="last" name="Bucuresti Nord" ora_sosire="14:20" intarziere="7" />
 		</Statii>
 	</Tren>
 	<Tren name="2">
@@ -48,12 +48,12 @@
 	<Tren name="5">
 		<Statii>
 			<Statie id="first" name="Bucuresti" ora_plecare="22:40" intarziere="0" />
-			<Statie id="2" name="Lehliu" ora_sosire="23:08" ora_plecare="23:19" intarziere="30" />
-			<Statie id="3" name="Ciulnita" ora_sosire="00:14" ora_plecare="00:22" intarziere="30" />
-			<Statie id="4" name="Fetesti" ora_sosire="01:29" ora_plecare="01:36" intarziere="30" />
-			<Statie id="4" name="Cernavoda" ora_sosire="02:17" ora_plecare="02:27" intarziere="30" />
-			<Statie id="4" name="Medgidia" ora_sosire="03:09" ora_plecare="03:13" intarziere="30" />
-			<Statie id="last" name="Constanta" ora_sosire="04:55" intarziere="30" />
+			<Statie id="2" name="Lehliu" ora_sosire="23:08" ora_plecare="23:19" intarziere="0" />
+			<Statie id="3" name="Ciulnita" ora_sosire="00:14" ora_plecare="00:22" intarziere="0" />
+			<Statie id="4" name="Fetesti" ora_sosire="01:29" ora_plecare="01:36" intarziere="0" />
+			<Statie id="4" name="Cernavoda" ora_sosire="02:17" ora_plecare="02:27" intarziere="0" />
+			<Statie id="4" name="Medgidia" ora_sosire="03:09" ora_plecare="03:13" intarziere="0" />
+			<Statie id="last" name="Constanta" ora_sosire="04:55" intarziere="0" />
 		</Statii>
 	</Tren>
 </Program>

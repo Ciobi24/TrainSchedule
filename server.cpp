@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "pugixml.hpp"
+#include <mutex>
 
 typedef struct threadInfo
 {
@@ -18,17 +19,29 @@ typedef struct threadInfo
     int client;
     bool admin;
 } threadInfo;
-
-void ProgramTrenuri(void *arg)
+typedef struct Clients
 {
-    printf("program\n");
-    struct threadInfo thread;
-    thread = *((struct threadInfo *)arg);
-    char msg[10000];
+    int client;
+    pid_t pid;
+    pthread_t thread;
+} Clients;
+typedef struct info
+{
+    char statie[30];
+    char tren[5];
+    char intarziere[5];
+} info;
+Clients clients[100];
+pthread_mutex_t socket_mutex = PTHREAD_MUTEX_INITIALIZER;
+std::mutex xmlMutex;
+
+void ProgramTrenuri(char *msg)
+{
+    // printf("program\n");
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file("program.xml");
     // printf("xml1\n");
-    strcpy(msg, "Program Trenuri:\n");
+    strcpy(msg, "\n\n//////////////////////////////////////\n\nProgram Trenuri:\n");
     if (result)
     {
 
@@ -43,23 +56,33 @@ void ProgramTrenuri(void *arg)
                 strcat(msg, "Statia: ");
                 strcat(msg, statie.attribute("name").value());
                 strcat(msg, ", Sosire: ");
-                strcat(msg, statie.attribute("ora_sosire").value());
+
+                if (strcmp(statie.attribute("id").value(), "first"))
+                {
+                    strcat(msg, statie.attribute("ora_sosire").value());
+                }
+                else
+                    strcat(msg, "-");
+
                 strcat(msg, ", Plecare: ");
-                strcat(msg, statie.attribute("ora_plecare").value());
+
+                if (strcmp(statie.attribute("id").value(), "last"))
+                {
+                    strcat(msg, statie.attribute("ora_plecare").value());
+                }
+                else
+                    strcat(msg, "-");
+
                 strcat(msg, ", Intarziere: ");
                 strcat(msg, statie.attribute("intarziere").value());
+                strcat(msg, " min");
                 strcat(msg, "\n");
             }
 
             strcat(msg, "\n");
         }
 
-        strcat(msg, "\0");
-        if (write(thread.client, msg, sizeof(msg)) <= 0)
-        {
-            printf("[Thread %d] ", thread.idThread);
-            perror("[Thread]Eroare la write() catre client.\n");
-        }
+        strcat(msg, "\n\n//////////////////////////////////////////////////\n\n");
     }
     else
     {
@@ -67,18 +90,9 @@ void ProgramTrenuri(void *arg)
         printf("Error description: %s", result.description());
     }
 }
-void StatusSosiri(void *arg)
+void StatusSosiri(info infos, char *msg)
 {
-    printf("status sosiri\n");
-    struct threadInfo thread;
-    thread = *((struct threadInfo *)arg);
-    char statie[100];
-    if (read(thread.client, statie, sizeof(statie)) < 0)
-    {
-        printf("[thread %d]", thread.idThread);
-        perror("eroare read() de la client");
-    }
-    char msg[10000];
+    std::lock_guard<std::mutex> lock(xmlMutex);
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file("program.xml");
     bool statie_gasita = false, tren_sosire = false;
@@ -101,10 +115,11 @@ void StatusSosiri(void *arg)
         pugi::xml_node node = doc.child("Program");
         pugi::xml_attribute attr = node.attribute("time");
         attr = ora;
+
         doc.save_file("program.xml");
 
-        strcpy(msg, "Sosiri in statia: ");
-        strcat(msg, statie);
+        strcpy(msg, "\n\n//////////////////////////////////////////////\n\nSosiri in statia: ");
+        strcat(msg, infos.statie);
         strcat(msg, "\n");
         for (pugi::xml_node tren = doc.child("Program").child("Tren"); tren; tren = tren.next_sibling("Tren"))
         {
@@ -147,7 +162,7 @@ void StatusSosiri(void *arg)
                     ok = false;
                 // printf("\n ora min program %d %d  ora min fisier %d %d\n", ora1, min1, ora2, min2);
                 // fflush(stdout);
-                if (strcmp(station.attribute("name").value(), statie) == 0)
+                if (strcmp(station.attribute("name").value(), infos.statie) == 0)
                 {
                     statie_gasita = true;
                     if (ok == true)
@@ -184,25 +199,14 @@ void StatusSosiri(void *arg)
         strcat(msg, "Statia nu a fost gasita\n");
     else if (tren_sosire == false)
         strcat(msg, "Niciun tren cu sosire in statia dorita in urmatoarea ora\n");
-    strcat(msg, "\0");
-    if (write(thread.client, msg, sizeof(msg)) <= 0)
-    {
-        printf("[Thread %d] ", thread.idThread);
-        perror("[Thread]Eroare la write() catre client.\n");
-    }
+    strcat(msg, "\n\n////////////////////////////////////////////////////\n\n");
+    // printf("Am executat sosiri\n");
+    // fflush(stdout);
 }
-void StatusPlecari(void *arg)
+void StatusPlecari(info infos, char *msg)
 {
-    printf("status plecari\n");
-    struct threadInfo thread;
-    thread = *((struct threadInfo *)arg);
-    char statie[100];
-    if (read(thread.client, statie, sizeof(statie)) < 0)
-    {
-        printf("[thread %d]", thread.idThread);
-        perror("eroare read() de la client");
-    }
-    char msg[10000];
+    // printf("status plecari\n");
+    std::lock_guard<std::mutex> lock(xmlMutex);
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file("program.xml");
     bool statie_gasita = false, tren_sosire = false;
@@ -227,8 +231,8 @@ void StatusPlecari(void *arg)
         attr = ora;
         doc.save_file("program.xml");
 
-        strcpy(msg, "Plecari din statia: ");
-        strcat(msg, statie);
+        strcpy(msg, "\n\n///////////////////////////////////////////////////\n\nPlecari din statia: ");
+        strcat(msg, infos.statie);
         strcat(msg, "\n");
         for (pugi::xml_node tren = doc.child("Program").child("Tren"); tren; tren = tren.next_sibling("Tren"))
         {
@@ -272,7 +276,7 @@ void StatusPlecari(void *arg)
                 // printf("\ndif min %d",min2-min1);
                 // printf("\n ora min program %d %d  ora min fisier %d %d\n", ora1, min1, ora2, min2);
                 // fflush(stdout);
-                if (strcmp(station.attribute("name").value(), statie) == 0)
+                if (strcmp(station.attribute("name").value(), infos.statie) == 0)
                 {
                     statie_gasita = true;
                     if (ok == true)
@@ -307,59 +311,68 @@ void StatusPlecari(void *arg)
         strcat(msg, "Statia nu a fost gasita\n");
     else if (tren_sosire == false)
         strcat(msg, "Niciun tren plecand din statia dorita in urmatoarea ora\n");
-    strcat(msg, "\0");
-    if (write(thread.client, msg, sizeof(msg)) <= 0)
+    strcat(msg, "\n\n////////////////////////////////////////////////////////////\n\n");
+}
+void send(const char msg[10000], Clients *clients)
+{
+    for (int i = 0; i < 100; i++)
     {
-        printf("[Thread %d] ", thread.idThread);
-        perror("[Thread]Eroare la write() catre client.\n");
+        if (clients[i].client)
+        {
+            if (kill(clients[i].pid, SIGUSR1) < 0)
+            {
+                perror("eroare trimitere semnal\n");
+            }
+            pthread_mutex_lock(&socket_mutex);
+            if (write(clients[i].client, msg, 10000) <= 0)
+            {
+                perror("Eroare la write() catre clienti.");
+            }
+            pthread_mutex_unlock(&socket_mutex);
+        }
     }
 }
-void Intarziere(void *arg)
+void Intarziere(info infos, char *rasp)
 {
-    struct threadInfo thread;
-    thread = *((struct threadInfo *)arg);
+    std::lock_guard<std::mutex> lock(xmlMutex);
     pugi::xml_document doc;
     pugi::xml_parse_result result = doc.load_file("program.xml");
     if (result)
     {
-        char n[5];
-        if (read(thread.client, n, sizeof(n)) < 0)
+        strcpy(rasp, "\n\n////////////////////////////////\n\nintarziere inregistrata\n\n////////////////////////////////////\n\n");
+        char msg[10000];
+        bzero(msg, sizeof(msg));
+        strcpy(msg, "\n\n////////////////////////////////////////////////\n\nTrenul ");
+        strcat(msg, infos.tren);
+        strcat(msg, "  Statia ");
+        strcat(msg, infos.statie);
+        if (strcmp(infos.intarziere, "0") == 0)
+            strcat(msg, " Ajuns conform graficului initial\n\n////////////////////////////////////////////////////////\n\n");
+        else if (strstr(infos.intarziere, "-"))
         {
-            perror("[server]Eroare la citirea de la client\n");
-            return;
+            strcat(msg, " Ajunge mai devreme cu ");
+            strcat(msg, infos.intarziere + 1);
+            strcat(msg, " min\n\n///////////////////////////////////////////////////////////////////\n\n");
         }
-        // printf("%s\n",n);
-        // fflush(stdout);
-        char statie[30];
-        if (read(thread.client, statie, sizeof(statie)) < 0)
+        else
         {
-            perror("[server]Eroare la citirea de la client\n");
-            return;
+            strcat(msg, " Intarziere ");
+            strcat(msg, infos.intarziere);
+            strcat(msg, " min\n\n////////////////////////////////////////////////////////////////////////////\n\n");
         }
-        // printf("%s\n",statie);
-        //         fflush(stdout);
-
-        char est[10];
-        if (read(thread.client, est, sizeof(est)) < 0)
-        {
-            perror("[server]Eroare la citirea de la client\n");
-            return;
-        }
-        // printf("%s\n",est);
-        //         fflush(stdout);
-
         for (pugi::xml_node tren = doc.child("Program").child("Tren"); tren; tren = tren.next_sibling("Tren"))
         {
-            if (strcmp(n, tren.attribute("name").value()) == 0)
+            if (strcmp(infos.tren, tren.attribute("name").value()) == 0)
             {
                 for (pugi::xml_node station = tren.child("Statii").child("Statie"); station; station = station.next_sibling("Statie"))
                 {
-                    if (strcmp(statie, station.attribute("name").value()) == 0)
+                    if (strcmp(infos.statie, station.attribute("name").value()) == 0)
                     {
                         for (pugi::xml_node nextst = station; nextst; nextst = nextst.next_sibling("Statie"))
                         {
                             pugi::xml_attribute attr = nextst.attribute("intarziere");
-                            attr.set_value(est);
+
+                            attr.set_value(infos.intarziere);
                         }
                         doc.save_file("program.xml");
                         break;
@@ -368,6 +381,7 @@ void Intarziere(void *arg)
                 break;
             }
         }
+        send(msg, clients);
     }
     else
     {
@@ -379,10 +393,9 @@ void connection(struct threadInfo &arg)
 {
     struct threadInfo thread;
     bool ad;
-
     if (read(arg.client, &ad, sizeof(ad)) < 0)
     {
-        perror("[server]Eroare la citirea de la client\n");
+        perror("Eroare la citirea de la client\n");
         return;
     }
     if (ad == 1)
@@ -395,7 +408,7 @@ void connection(struct threadInfo &arg)
             char id[10], pd[10];
             if (read(arg.client, id, sizeof(id)) < 0)
             {
-                perror("[client]Eroare la citirea de la server\n");
+                perror("Eroare la citirea de la server\n");
                 return;
             }
             pugi::xml_document doc;
@@ -412,7 +425,7 @@ void connection(struct threadInfo &arg)
                 }
                 if (write(arg.client, &ok, sizeof(ok)) < 0)
                 {
-                    perror("[client]Eroare la scrierea de la server\n");
+                    perror("Eroare la scrierea de la server\n");
                     return;
                 }
                 // printf("check 3\n");
@@ -423,7 +436,7 @@ void connection(struct threadInfo &arg)
                     ok = false;
                     if (read(arg.client, pd, sizeof(pd)) < 0)
                     {
-                        perror("[client]Eroare la citirea de la server\n");
+                        perror("Eroare la citirea de la server\n");
                         return;
                     }
                     // printf("check 4\n");
@@ -436,7 +449,7 @@ void connection(struct threadInfo &arg)
                     }
                     if (write(arg.client, &ok, sizeof(ok)) < 0)
                     {
-                        perror("[client]Eroare la scrierea de la server\n");
+                        perror("Eroare la scrierea de la server\n");
                         return;
                     }
                     // printf("check 5\n");
@@ -460,30 +473,55 @@ static void *treat(void *arg)
     int nr;
     thread = *((struct threadInfo *)arg);
     connection(thread);
-    printf("%d\n", (int)thread.admin);
-    fflush(stdout);
+    struct info infos;
+    char raspuns[10000];
+
     while (1)
     {
+        bzero(&infos, sizeof(infos));
+        bzero(&raspuns, sizeof(raspuns));
+        // pthread_mutex_lock(&socket_mutex);
         if (read(thread.client, &nr, sizeof(int)) <= 0)
         {
             printf("[Thread %d]\n", thread.idThread);
             perror("Eroare la read() de la client.\n");
         }
+        // printf("%d\n", nr);
+        // fflush(stdout);
+        // pthread_mutex_unlock(&socket_mutex);
+        // usleep(10);
+        // pthread_mutex_lock(&socket_mutex);
+        if (read(thread.client, &infos, sizeof(infos)) <= 0)
+        {
+            printf("[Thread %d]\n", thread.idThread);
+            perror("Eroare la read() de la client.\n");
+        }
+        // pthread_mutex_unlock(&socket_mutex);
+        printf("%s\n", infos.statie);
         printf("thread citire\n");
+        fflush(stdout);
         if (nr == 1)
         {
-            StatusSosiri((struct threadInfo *)arg);
+            StatusSosiri(infos, raspuns);
+            // printf("%s\n", raspuns);
+            // printf("aici\n");
+            // fflush(stdout);
         }
         else if (nr == 2)
         {
-            StatusPlecari((struct threadInfo *)arg);
+            StatusPlecari(infos, raspuns);
         }
         else if (nr == 3)
         {
-            ProgramTrenuri((struct threadInfo *)arg);
+            ProgramTrenuri(raspuns);
         }
         else if (nr == 4)
         {
+            for (int i = 0; i < 100; i++)
+                if (clients[i].client == thread.client)
+                {
+                    clients[i].client = 0;
+                }
             shutdown(thread.client, SHUT_RDWR);
             close((intptr_t)arg);
             return (NULL);
@@ -492,18 +530,29 @@ static void *treat(void *arg)
         {
             // printf("comanda 5\n");
             // fflush(stdout);
-            Intarziere((struct threadInfo *)arg);
+            Intarziere(infos, raspuns);
         }
+
+        printf("before write\n");
+        fflush(stdout);
+        // pthread_mutex_lock(&socket_mutex);
+        if (write(thread.client, raspuns, sizeof(raspuns)) <= 0)
+        {
+            perror("eroare write raspuns catre client\n");
+        }
+        // pthread_mutex_lock(&socket_mutex);
+
+        printf("final comanda\n");
+        fflush(stdout);
     }
-    close((intptr_t)arg);
     return (NULL);
 };
 
 int main()
 {
-    int PORT;
-    printf("\nIntroduceti PORT-ul dorit pentru a porni serverul: ");
-    scanf("%d", &PORT);
+    int port;
+    printf("\nIntroduceti portul dorit: ");
+    scanf("%d", &port);
     struct sockaddr_in server;
     struct sockaddr_in from;
     int sd;
@@ -517,8 +566,8 @@ int main()
 
         if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         {
-            perror("[server]Eroare la socket().\n");
-            return errno;
+            perror("Eroare la socket()\n");
+            exit(errno);
         }
         int on = 1;
         setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
@@ -526,36 +575,46 @@ int main()
         bzero(&from, sizeof(from));
         server.sin_family = AF_INET;
         server.sin_addr.s_addr = htonl(INADDR_ANY);
-        server.sin_port = htons(PORT);
+        server.sin_port = htons(port);
         if (bind(sd, (struct sockaddr *)&server, sizeof(struct sockaddr)) == -1)
         {
-            perror("[server]Eroare la bind().\n");
-            return errno;
+            perror("Eroare la bind().\n");
+            exit(errno);
         }
         if (listen(sd, 2) == -1)
         {
-            perror("[server]Eroare la listen().\n");
-            return errno;
+            perror("Eroare la listen().\n");
+            exit(errno);
         }
         int i = 0;
+        int k = 0;
         while (1)
         {
             int client;
+            pid_t pid;
             threadInfo *thread;
             socklen_t length = sizeof(from);
-            printf("Port->%d\n", PORT);
+            printf("port: %d\n", port);
             fflush(stdout);
             if ((client = accept(sd, (struct sockaddr *)&from, &length)) < 0)
             {
-                perror("[server]Eroare la accept().\n");
+                perror("Eroare la accept().\n");
                 continue;
             }
-            thread = (struct threadInfo *)malloc(sizeof(struct threadInfo));
 
+            if (read(client, &pid, sizeof(pid)) <= 0)
+            {
+                perror("eroare read pid client\n");
+                exit(errno);
+            }
+            thread = (struct threadInfo *)malloc(sizeof(struct threadInfo));
             thread->client = client;
             thread->idThread = i++;
+            clients[k].client = client;
+            clients[k].pid = pid;
             printf("client acceptat\n");
             pthread_create(&th[i], NULL, &treat, thread);
+            clients[k++].thread = th[i];
         }
     }
     else
