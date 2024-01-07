@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
-<Program time="16:57">
+<Program time="12:53">
 	<Tren name="1">
 		<Statii>
 			<Statie id="first" name="Iasi" ora_plecare="09:40" intarziere="0" />
-			<Statie id="2" name="Pascani" ora_sosire="10:20" ora_plecare="10:25" intarziere="7" />
-			<Statie id="3" name="Roman" ora_sosire="11:00" ora_plecare="11:05" intarziere="7" />
-			<Statie id="4" name="Bacau" ora_sosire="11:30" ora_plecare="11:38" intarziere="7" />
-			<Statie id="5" name="Vrancea" ora_sosire="12:35" ora_plecare="12:40" intarziere="7" />
-			<Statie id="6" name="Buzau" ora_sosire="13:10" ora_plecare="13:30" intarziere="7" />
-			<Statie id="last" name="Bucuresti Nord" ora_sosire="14:20" intarziere="7" />
+			<Statie id="2" name="Pascani" ora_sosire="10:20" ora_plecare="10:25" intarziere="0" />
+			<Statie id="3" name="Roman" ora_sosire="11:00" ora_plecare="11:05" intarziere="0" />
+			<Statie id="4" name="Bacau" ora_sosire="11:30" ora_plecare="11:38" intarziere="0" />
+			<Statie id="5" name="Vrancea" ora_sosire="12:35" ora_plecare="12:40" intarziere="0" />
+			<Statie id="6" name="Buzau" ora_sosire="13:10" ora_plecare="13:30" intarziere="0" />
+			<Statie id="last" name="Bucuresti Nord" ora_sosire="14:20" intarziere="0" />
 		</Statii>
 	</Tren>
 	<Tren name="2">
