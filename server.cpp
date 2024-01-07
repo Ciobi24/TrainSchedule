@@ -19,14 +19,8 @@ typedef struct threadInfo
   int client;
   bool admin;
 } threadInfo;
-typedef struct Clients
-{
-  int client;
-  pid_t pid;
-  pthread_t thread;
-  int conectat;
-} Clients;
-Clients clients[100];
+
+int clients[100];
 std::mutex xmlMutex;
 
 void ProgramTrenuri(char *msg)
@@ -310,12 +304,12 @@ void StatusPlecari(char statie[], char *msg)
   strcat(msg, "\n\n////////////////////////////////////////////////\n\n");
 }
 
-void send(char message[], Clients *allClients)
+void send(char message[], int *clients)
 {
   for (int i = 0; i < 100; i++)
   {
-    if (clients[i].client)
-      if (write(clients[i].client, message, 10000) <= 0)
+    if (clients[i])
+      if (write(clients[i], message, 10000) <= 0)
       {
         perror("Eroare la write() catre clienti.");
       }
@@ -380,96 +374,10 @@ void Intarziere(char *tren, char *statie, char *intarziere, char *rasp)
     printf("Error description: %s", result.description());
   }
 }
-void connection(struct threadInfo &arg)
-{
-    struct threadInfo thread;
-    bool ad;
-    if (read(arg.client, &ad, sizeof(ad)) < 0)
-    {
-        perror("Eroare la citirea de la client\n");
-        return;
-    }
-    if (ad == 1)
-    {
-        // printf("check 1\n");
-        // fflush(stdout);
-        bool ok = false;
-        while (ok == false)
-        {
-            char id[10], pd[10];
-            if (read(arg.client, id, sizeof(id)) < 0)
-            {
-                perror("Eroare la citirea de la server\n");
-                return;
-            }
-            pugi::xml_document doc;
-            pugi::xml_parse_result result = doc.load_file("users.xml");
-            // printf("check 2\n");
-            // fflush(stdout);
-
-            if (result)
-            {
-                for (pugi::xml_node user = doc.child("Admins").child("user"); user; user = user.next_sibling("user"))
-                {
-                    if (strcmp(id, user.attribute("id").value()) == 0)
-                        ok = true;
-                }
-                if (write(arg.client, &ok, sizeof(ok)) < 0)
-                {
-                    perror("Eroare la scrierea de la server\n");
-                    return;
-                }
-                // printf("check 3\n");
-                // fflush(stdout);
-
-                if (ok)
-                {
-                    ok = false;
-                    if (read(arg.client, pd, sizeof(pd)) < 0)
-                    {
-                        perror("Eroare la citirea de la server\n");
-                        return;
-                    }
-                    // printf("check 4\n");
-                    // fflush(stdout);
-
-                    for (pugi::xml_node user = doc.child("Admins").child("user"); user; user = user.next_sibling("user"))
-                    {
-                        if (strcmp(pd, user.attribute("pswd").value()) == 0)
-                            ok = true;
-                    }
-                    if (write(arg.client, &ok, sizeof(ok)) < 0)
-                    {
-                        perror("Eroare la scrierea de la server\n");
-                        return;
-                    }
-                    // printf("check 5\n");
-                    // fflush(stdout);
-                }
-            }
-            else
-            {
-                printf("XML [ ] parsed with errors, attr value: %s\n", doc.child("node").attribute("attr").value());
-                printf("Error description: %s", result.description());
-            }
-        }
-        arg.admin = true;
-    }
-    else
-        arg.admin = false;
-        for(int i=0;i<100;i++)
-        if(clients[i].client==thread.client){
-            clients[i].conectat=1;
-            break;
-        }
-
-}
-
 void *treat(void *arg)
 {
   struct threadInfo thread;
   thread = *((struct threadInfo *)arg);
-  connection(thread);
   char command[50];
   char raspuns[10000];
   while (1)
@@ -513,7 +421,7 @@ void *treat(void *arg)
       else
         strcpy(raspuns, "Comanda nu respecta formatul\n");
     }
-    else if (strstr(command, "intarziere")&&thread.admin==1)
+    else if (strstr(command, "intarziere"))
     {
       char *p;
       char tren[5], statie[30], intarziere[5];
@@ -545,9 +453,9 @@ void *treat(void *arg)
     {
       strcpy(raspuns, "Client deconectat cu succes!\n");
       for (int i = 0; i < 100; i++)
-        if (clients[i].client == thread.client)
+        if (clients[i] == thread.client)
         {
-          clients[i].client = 0;
+          clients[i]= 0;
         }
       if (write(thread.client, raspuns, sizeof(raspuns)) <= 0)
       {
@@ -570,6 +478,30 @@ void *treat(void *arg)
     }
   }
   return NULL;
+}
+
+void *timer(void *arg)
+{
+    char raspuns[10000];
+    while (1)
+    {
+        bzero(raspuns, sizeof(raspuns));
+        sleep(30);
+        for (int i = 0; i < 10; i++)
+        {
+            if (clients[i])
+            {
+                ProgramTrenuri(raspuns);
+                // socketMutex.lock();
+
+                if (write(clients[i], raspuns, sizeof(raspuns)) <= 0)
+                {
+                    perror("[timer]Eroare la write() catre client.\n");
+                }
+                //   socketMutex.unlock();
+            }
+        }
+    }
 }
 
 int main()
@@ -610,6 +542,8 @@ int main()
     }
     int i = 0;
     int k = 0;
+    pthread_t p;
+        pthread_create(&p, NULL, &timer, NULL);
     while (1)
     {
       int client;
@@ -626,10 +560,9 @@ int main()
       thread = (struct threadInfo *)malloc(sizeof(struct threadInfo));
       thread->client = client;
       thread->idThread = i++;
-      clients[k].client = client;
+      clients[k++] = client;
       printf("client acceptat\n");
       pthread_create(&th[i], NULL, &treat, thread);
-      clients[k++].thread = th[i];
     }
   }
   else
