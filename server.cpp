@@ -380,10 +380,96 @@ void Intarziere(char *tren, char *statie, char *intarziere, char *rasp)
     printf("Error description: %s", result.description());
   }
 }
+void connection(struct threadInfo &arg)
+{
+    struct threadInfo thread;
+    bool ad;
+    if (read(arg.client, &ad, sizeof(ad)) < 0)
+    {
+        perror("Eroare la citirea de la client\n");
+        return;
+    }
+    if (ad == 1)
+    {
+        // printf("check 1\n");
+        // fflush(stdout);
+        bool ok = false;
+        while (ok == false)
+        {
+            char id[10], pd[10];
+            if (read(arg.client, id, sizeof(id)) < 0)
+            {
+                perror("Eroare la citirea de la server\n");
+                return;
+            }
+            pugi::xml_document doc;
+            pugi::xml_parse_result result = doc.load_file("users.xml");
+            // printf("check 2\n");
+            // fflush(stdout);
+
+            if (result)
+            {
+                for (pugi::xml_node user = doc.child("Admins").child("user"); user; user = user.next_sibling("user"))
+                {
+                    if (strcmp(id, user.attribute("id").value()) == 0)
+                        ok = true;
+                }
+                if (write(arg.client, &ok, sizeof(ok)) < 0)
+                {
+                    perror("Eroare la scrierea de la server\n");
+                    return;
+                }
+                // printf("check 3\n");
+                // fflush(stdout);
+
+                if (ok)
+                {
+                    ok = false;
+                    if (read(arg.client, pd, sizeof(pd)) < 0)
+                    {
+                        perror("Eroare la citirea de la server\n");
+                        return;
+                    }
+                    // printf("check 4\n");
+                    // fflush(stdout);
+
+                    for (pugi::xml_node user = doc.child("Admins").child("user"); user; user = user.next_sibling("user"))
+                    {
+                        if (strcmp(pd, user.attribute("pswd").value()) == 0)
+                            ok = true;
+                    }
+                    if (write(arg.client, &ok, sizeof(ok)) < 0)
+                    {
+                        perror("Eroare la scrierea de la server\n");
+                        return;
+                    }
+                    // printf("check 5\n");
+                    // fflush(stdout);
+                }
+            }
+            else
+            {
+                printf("XML [ ] parsed with errors, attr value: %s\n", doc.child("node").attribute("attr").value());
+                printf("Error description: %s", result.description());
+            }
+        }
+        arg.admin = true;
+    }
+    else
+        arg.admin = false;
+        for(int i=0;i<100;i++)
+        if(clients[i].client==thread.client){
+            clients[i].conectat=1;
+            break;
+        }
+
+}
+
 void *treat(void *arg)
 {
   struct threadInfo thread;
   thread = *((struct threadInfo *)arg);
+  connection(thread);
   char command[50];
   char raspuns[10000];
   while (1)
@@ -427,7 +513,7 @@ void *treat(void *arg)
       else
         strcpy(raspuns, "Comanda nu respecta formatul\n");
     }
-    else if (strstr(command, "intarziere"))
+    else if (strstr(command, "intarziere")&&thread.admin==1)
     {
       char *p;
       char tren[5], statie[30], intarziere[5];
