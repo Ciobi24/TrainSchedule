@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
       }
       sleep(2);
 
-      if (strstr(command, "quit"))
+      if (strcmp(command, "quit")==0)
       {
         run = false;
         kill(pid, 9);
