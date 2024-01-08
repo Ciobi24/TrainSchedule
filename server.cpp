@@ -487,18 +487,16 @@ void *timer(void *arg)
     {
         bzero(raspuns, sizeof(raspuns));
         sleep(30);
+        ProgramTrenuri(raspuns);
         for (int i = 0; i < 10; i++)
         {
             if (clients[i])
             {
-                ProgramTrenuri(raspuns);
-                // socketMutex.lock();
-
                 if (write(clients[i], raspuns, sizeof(raspuns)) <= 0)
                 {
                     perror("[timer]Eroare la write() catre client.\n");
                 }
-                //   socketMutex.unlock();
+
             }
         }
     }
@@ -506,6 +504,8 @@ void *timer(void *arg)
 
 int main()
 {
+      pthread_t p;
+        pthread_create(&p, NULL, &timer, NULL);
   int port;
   printf("\nIntroduceti portul dorit: ");
   scanf("%d", &port);
@@ -542,8 +542,7 @@ int main()
     }
     int i = 0;
     int k = 0;
-    pthread_t p;
-        pthread_create(&p, NULL, &timer, NULL);
+
     while (1)
     {
       int client;

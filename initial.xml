@@ -33,7 +33,7 @@
 			<Statie id="4" name="Sinaia" ora_sosire="08:31" ora_plecare="08:42" intarziere="0" />
 			<Statie id="5" name="Campina" ora_sosire="09:22" ora_plecare="09:26" intarziere="0" />
 			<Statie id="6" name="Ploiesti" ora_sosire="09:58" ora_plecare="10:03" intarziere="0" />
-			<Statie id="last" name="Bucuresti" ora_sosire="10:26" intarziere="0" />
+			<Statie id="last" name="Bucuresti Nord" ora_sosire="10:26" intarziere="0" />
 		</Statii>
 	</Tren>
 	<Tren name="4">
@@ -42,7 +42,7 @@
 			<Statie id="2" name="Teius" ora_sosire="21:58" ora_plecare="22:09" intarziere="0"  />
 			<Statie id="3" name="Brasov" ora_sosire="00:24" ora_plecare="00:32" intarziere="0"  />
 			<Statie id="4" name="Ploiesti" ora_sosire="03:19" ora_plecare="03:26" intarziere="0"  />
-			<Statie id="last" name="Bucuresti" ora_sosire="05:05" intarziere="0"  />
+			<Statie id="last" name="Bucuresti Nord" ora_sosire="05:05" intarziere="0"  />
 		</Statii>
 	</Tren>
 	<Tren name="5">

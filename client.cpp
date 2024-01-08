@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
       // dprintf(STDOUT_FILENO, "%hu ", (unsigned short)command[i]);
       // dprintf(STDOUT_FILENO, "\n");
       // printf("%s\n", command);
-      fflush(stdout);
+      // fflush(stdout);
       if (write(sock_descr, command, sizeof(command)) <= 0)
       {
         perror("Eroare la scrierea catre server\n");
