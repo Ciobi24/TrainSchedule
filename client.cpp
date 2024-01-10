@@ -10,6 +10,29 @@
 #include <csignal>
 #include <pthread.h>
 
+bool run=true;
+void * for_reading(void* arg)
+  {
+    int sock_descr=*(int*)arg;
+    char raspuns[10000];
+    while (run)
+    {
+      bzero(raspuns, sizeof(raspuns));
+
+      if (read(sock_descr, raspuns, sizeof(raspuns)) < 0)
+
+      {
+        perror("eroare la read() program\n");
+        exit(errno);
+      }
+
+      printf("%s", raspuns);
+      fflush(stdout);
+      
+    }
+    pthread_exit(NULL);
+  }
+
 int main(int argc, char *argv[])
 {
   int sock_descr;
@@ -36,22 +59,16 @@ int main(int argc, char *argv[])
     perror("Eroare la conectarea la server\n");
     exit(errno);
   }
-  int pid = fork();
-  if (pid == -1)
-  {
-    perror("Error in fork.\n");
-    return errno;
-  }
+  int * sock=&sock_descr;
+  pthread_t p;
+  pthread_create(&p,NULL,&for_reading,sock);
 
-  if (pid)
-  {
     printf("\n\n///////////////////////////////////////////////////////\n\n");
     printf("              MERSUL TRENURILOR\n\n");
     printf("\n\n///////////////////////////////////////////////////////\n\n");
     fflush(stdout);
     char command[50];
-    bool run = true;
-    ;
+    
     while (run == true)
     {
 
@@ -75,33 +92,16 @@ int main(int argc, char *argv[])
 
       if (strcmp(command, "quit")==0)
       {
-        run = false;
-        kill(pid, 9);
+           run = false;
       }
     }
 
     close(sock_descr);
+        pthread_join(p, NULL); // Wait for the reading thread to exit properly
     exit(0);
   }
-  else
-  {
-    char raspuns[10000];
-    while (1)
-    {
-      bzero(raspuns, sizeof(raspuns));
 
-      if (read(sock_descr, raspuns, sizeof(raspuns)) < 0)
 
-      {
-        perror("eroare la read() program\n");
-        exit(errno);
-      }
-
-      printf("%s", raspuns);
-      fflush(stdout);
-    }
-  }
-}
 
 
 
